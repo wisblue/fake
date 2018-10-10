@@ -77,6 +77,30 @@ fake.UseExternalData(true)
 password := fake.Paragraph()
 ```
 
+Using FillStruct:
+
+ FillStruct fills struct field with faked data.  At first FillStruct will try to get the field tag with tag key "fake" for which fake function to call. If "fake" tag is not set, it will look at the field name if matches a fake function name. Otherwise a error is logged out.
+
+```go
+type A struct {
+		UserName       string
+		EmailAddress   string
+		Place          string `fake:"StreetAddress"`
+		Phone          string
+		PostCode       string `fake:"zip"`
+		CreditCardType string
+		CreditCardNum  string
+		Currency       string
+		CurrencyCode   string
+		Day            int
+		...
+}
+
+a := &A{}
+a = FillStruct(&a).(*A)
+fmt.Printf("%+v\n", *a)
+```
+
 ### Author
 
 Dmitry Afanasyev,

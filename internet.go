@@ -108,7 +108,7 @@ func TopLevelDomain() string {
 
 // DomainName generates random domain name
 func DomainName() string {
-	return Company() + "." + TopLevelDomain()
+	return strings.ToLower(lookup("en", "companies", true)) + "." + TopLevelDomain()
 }
 
 // EmailAddress generates email address
