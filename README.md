@@ -1,5 +1,10 @@
 [![Build Status](https://img.shields.io/travis/icrowley/fake.svg?style=flat)](https://travis-ci.org/icrowley/fake) [![Godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/icrowley/fake) [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/icrowley/fake/master/LICENSE)
 
+Updates: Oct 11, 2018 
+
+1. added Chinese language data and functions.
+2. FillStruct automatically fill struct field with fake data by tag or fieldnames. See examples section for details.
+
 Fake
 ====
 
@@ -82,18 +87,20 @@ Using FillStruct:
  FillStruct fills struct field with faked data.  At first FillStruct will try to get the field tag with tag key "fake" for which fake function to call. If "fake" tag is not set, it will look at the field name if matches a fake function name. Otherwise a error is logged out.
 
 ```go
-type A struct {
-		UserName       string
-		EmailAddress   string
-		Place          string `fake:"StreetAddress"`
-		Phone          string
-		PostCode       string `fake:"zip"`
+	type A struct {
+		UserName string	
+		Profile  struct {
+			EmailAddresses [2]string `fake:"EmailAddress"`
+			Place          string    `fake:"StreetAddress"`
+			Phone          string
+			PostCode       string `fake:"zip"`
+		}
 		CreditCardType string
 		CreditCardNum  string
 		Currency       string
 		CurrencyCode   string
 		Day            int
-		...
+	...
 }
 
 a := &A{}
