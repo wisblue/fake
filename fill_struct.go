@@ -67,65 +67,85 @@ var floatFaker = map[string]func() float32{
 // a error is logged.
 func FillStruct(a interface{}) interface{} {
 	v := reflect.ValueOf(a).Elem()
-	for j := 0; j < v.NumField(); j++ {
-		f := v.Field(j)
-		n := v.Type().Field(j).Name
-		tag := v.Type().Field(j).Tag
-		t := f.Type().String()
+	//var tag reflect.StructTag
+	return fillStruct(v, "", reflect.StructTag("")).Addr().Interface()
+}
 
-		if f.CanSet() == false {
-			continue
+func fillStruct(v reflect.Value, name string, tag reflect.StructTag) reflect.Value {
+	//	for j := 0; j < v.NumField(); j++ {
+	//		f := v.Field(j)
+	//		n := v.Type().Field(j).Name
+	//		tag := v.Type().Field(j).Tag
+	//		t := f.Kind()
+
+	//		if f.CanSet() == false {
+	//			continue
+	//		}
+	t := v.Kind()
+
+	if t == reflect.String {
+		var fakeFn func() string
+		if fakeFunc := tag.Get("fake"); fakeFunc != "" {
+			if fn, ok := stringFaker[strcase.ToCamel(fakeFunc)]; ok {
+				fakeFn = fn
+			}
 		}
-
-		if t == "string" {
-			var fakeFn func() string
-			if fakeFunc := tag.Get("fake"); fakeFunc != "" {
-				if fn, ok := stringFaker[strcase.ToCamel(fakeFunc)]; ok {
-					fakeFn = fn
-				}
+		if fakeFn == nil {
+			if fn, ok := stringFaker[strcase.ToCamel(name)]; ok {
+				fakeFn = fn
 			}
-			if fakeFn == nil {
-				if fn, ok := stringFaker[strcase.ToCamel(n)]; ok {
-					fakeFn = fn
-				}
+		}
+		if fakeFn != nil {
+			v.SetString(fakeFn())
+		} else {
+			log.Println("Do not know how for fake ", name)
+		}
+	} else if t == reflect.Int || t == reflect.Int64 {
+		var fakeFn func() int
+		if fakeFunc := tag.Get("fake"); fakeFunc != "" {
+			if fn, ok := intFaker[strcase.ToCamel(fakeFunc)]; ok {
+				fakeFn = fn
 			}
-			if fakeFn != nil {
-				f.SetString(fakeFn())
-			} else {
-				log.Println("Do not know how for fake ", n)
+		}
+		if fakeFn == nil {
+			if fn, ok := intFaker[strcase.ToCamel(name)]; ok {
+				fakeFn = fn
 			}
-		} else if t == "int" {
-			var fakeFn func() int
-			if fakeFunc := tag.Get("fake"); fakeFunc != "" {
-				if fn, ok := intFaker[strcase.ToCamel(fakeFunc)]; ok {
-					fakeFn = fn
-				}
+		}
+		if fakeFn != nil {
+			v.SetInt(int64(fakeFn()))
+		}
+	} else if t == reflect.Float32 || t == reflect.Float64 {
+		var fakeFn func() float32
+		if fakeFunc := tag.Get("fake"); fakeFunc != "" {
+			if fn, ok := floatFaker[strcase.ToCamel(fakeFunc)]; ok {
+				fakeFn = fn
 			}
-			if fakeFn == nil {
-				if fn, ok := intFaker[strcase.ToCamel(n)]; ok {
-					fakeFn = fn
-				}
+		}
+		if fakeFn == nil {
+			if fn, ok := floatFaker[strcase.ToCamel(name)]; ok {
+				fakeFn = fn
 			}
-			if fakeFn != nil {
-				f.SetInt(int64(fakeFn()))
-			}
-		} else if t == "float32" {
-			var fakeFn func() float32
-			if fakeFunc := tag.Get("fake"); fakeFunc != "" {
-				if fn, ok := floatFaker[strcase.ToCamel(fakeFunc)]; ok {
-					fakeFn = fn
-				}
-			}
-			if fakeFn == nil {
-				if fn, ok := floatFaker[strcase.ToCamel(n)]; ok {
-					fakeFn = fn
-				}
-			}
-			if fakeFn != nil {
-				f.SetFloat(float64(fakeFn()))
-			}
+		}
+		if fakeFn != nil {
+			v.SetFloat(float64(fakeFn()))
+		}
+	} else if t == reflect.Struct {
+		vv := reflect.Indirect(v)
+		for j := 0; j < vv.NumField(); j++ {
+			tag := vv.Type().Field(j).Tag
+			name := vv.Type().Field(j).Name
+			fillStruct(vv.Field(j), name, tag)
+		}
+	} else if t == reflect.Slice {
+		for i := 0; i < v.Len(); i++ {
+			fillStruct(v.Index(i), name, tag)
+		}
+	} else if t == reflect.Array {
+		for i := 0; i < v.Len(); i++ {
+			fillStruct(v.Index(i), name, tag)
 		}
 	}
 
-	return a
+	return v
 }
