@@ -51,7 +51,7 @@ func Street() string {
 
 // StreetAddress generates random street name along with building number
 func StreetAddress() string {
-	return join(Street(), strconv.Itoa(r.Intn(100)))
+	return join(Street(), strconv.Itoa(r.Intn(100)), localeFormat[lang].streetNumberSuffix)
 }
 
 func streetSuffix() string {

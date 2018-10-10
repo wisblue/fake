@@ -74,7 +74,7 @@ func suffix(gender string) string {
 }
 
 func fullNameWithPrefix(gender string) string {
-	return join(prefix(gender), firstName(gender), lastName(gender))
+	return join(prefix(gender), fullName(gender))
 }
 
 // MaleFullNameWithPrefix generates prefixed male full name
@@ -96,19 +96,19 @@ func FullNameWithPrefix() string {
 }
 
 func fullNameWithSuffix(gender string) string {
-	return join(firstName(gender), lastName(gender), suffix(gender))
+	return join(fullName(gender), suffix(gender))
 }
 
 // MaleFullNameWithSuffix generates suffixed male full name
 // if suffixes for the given language are available
 func MaleFullNameWithSuffix() string {
-	return fullNameWithPrefix("male")
+	return fullNameWithSuffix("male")
 }
 
 // FemaleFullNameWithSuffix generates suffixed female full name
 // if suffixes for the given language are available
 func FemaleFullNameWithSuffix() string {
-	return fullNameWithPrefix("female")
+	return fullNameWithSuffix("female")
 }
 
 // FullNameWithSuffix generates suffixed full name
@@ -124,7 +124,7 @@ func fullName(gender string) string {
 	case 1:
 		return fullNameWithSuffix(gender)
 	default:
-		return join(firstName(gender), lastName(gender))
+		return userNameFuncs[lang].makePersonName(lang, gender)
 	}
 }
 

@@ -7,7 +7,12 @@ import (
 func TestSetLang(t *testing.T) {
 	err := SetLang("ru")
 	if err != nil {
-		t.Error("SetLang should successfully set lang")
+		t.Error("SetLang should successfully set lang", "ru")
+	}
+
+	err = SetLang("cn")
+	if err != nil {
+		t.Error("SetLang should successfully set lang:", "cn")
 	}
 
 	err = SetLang("sd")

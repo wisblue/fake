@@ -13,7 +13,6 @@ func TestAddresses(t *testing.T) {
 			t.Errorf("Continent failed with lang %s", lang)
 		}
 
-		v = Country()
 		if v == "" {
 			t.Errorf("Country failed with lang %s", lang)
 		}

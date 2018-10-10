@@ -59,6 +59,25 @@ var useExternalData = false
 var enFallback = true
 var availLangs = GetLangs()
 
+type localeFormatType struct {
+	wordDelimiter      string
+	streetNumberSuffix string
+}
+
+var localeFormat = map[string]localeFormatType{
+	"cn": localeFormatType{
+		wordDelimiter:      "",
+		streetNumberSuffix: "号",
+	},
+	"en": localeFormatType{
+		wordDelimiter:      " ",
+		streetNumberSuffix: "",
+	},
+	"ru": localeFormatType{wordDelimiter: " ",
+		streetNumberSuffix: "",
+	},
+}
+
 var (
 	// ErrNoLanguageFn is the error that indicates that given language is not available
 	ErrNoLanguageFn = func(lang string) error { return fmt.Errorf("The language passed (%s) is not available", lang) }
@@ -93,7 +112,7 @@ func (s *rndSrc) Seed(n int64) {
 // GetLangs returns a slice of available languages
 func GetLangs() []string {
 	var langs []string
-	for k, v := range data {
+	for k, v := range _escData {
 		if v.isDir && k != "/" && k != "/data" {
 			langs = append(langs, strings.Replace(k, "/data/", "", 1))
 		}
@@ -144,7 +163,7 @@ func join(parts ...string) string {
 			filtered = append(filtered, part)
 		}
 	}
-	return strings.Join(filtered, " ")
+	return strings.Join(filtered, localeFormat[lang].wordDelimiter)
 }
 
 func generate(lang, cat string, fallback bool) string {

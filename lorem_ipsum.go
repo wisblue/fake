@@ -34,7 +34,7 @@ func WordsN(n int) string {
 	for i := 0; i < n; i++ {
 		words[i] = Word()
 	}
-	return strings.Join(words, " ")
+	return strings.Join(words, localeFormat[lang].wordDelimiter)
 }
 
 // Words generates from 1 to 5 random words
@@ -58,7 +58,7 @@ func Sentence() string {
 		words = append(words, Word())
 	}
 
-	sentence := strings.Join(words, " ")
+	sentence := strings.Join(words, localeFormat[lang].wordDelimiter)
 
 	if r.Intn(8) == 0 {
 		sentence += "!"
