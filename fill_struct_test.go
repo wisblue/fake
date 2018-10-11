@@ -1,9 +1,14 @@
 package fake
 
 import (
+	"log"
 	"reflect"
 	"testing"
 )
+
+func init() {
+	log.SetFlags(log.Lshortfile)
+}
 
 func TestFillStruct(t *testing.T) {
 	type A struct {
@@ -17,7 +22,7 @@ func TestFillStruct(t *testing.T) {
 		CreditCardType string
 		CreditCardNum  string
 		Currency       string
-		CurrencyCode   string
+		CurrencyCode   string `fake:"-"` // skip
 		Day            int
 		WeekDay        string
 		WeekDayShort   string
@@ -48,6 +53,11 @@ func TestFillStruct(t *testing.T) {
 		Brand          string
 		ProductName    string
 		Product        string
+		URL            string
+		Description    string
+		Price          uint64
+		Quantiry       uint64
+		PriceF         float64
 	}
 	a := &A{}
 
@@ -57,6 +67,12 @@ func TestFillStruct(t *testing.T) {
 		a = FillStruct(a).(*A)
 		//t.Logf("%+v\n", *a)
 
+		t.Log(a.Price)
+
+		if a.CurrencyCode != "" {
+			t.Errorf("Expect CurrencyCode to be empty. got %s\n", a.CurrencyCode)
+		}
+
 		vv := reflect.ValueOf(a).Elem()
 		for j := 0; j < vv.NumField(); j++ {
 			f := vv.Field(j)
@@ -65,7 +81,7 @@ func TestFillStruct(t *testing.T) {
 			//t.Logf("Name: %s  Kind: %s  Type: %s\n", n, f.Kind(), typ)
 
 			if kind == reflect.String {
-				if f.String() == "" {
+				if f.String() == "" && n != "CurrencyCode" {
 					t.Log("Failed field:", n)
 					t.Fail()
 				}

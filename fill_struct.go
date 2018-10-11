@@ -7,7 +7,7 @@ import (
 	"github.com/iancoleman/strcase"
 )
 
-var stringFaker = map[string]func() string{
+var stringFaker = map[string]interface{}{
 	"UserName":       UserName,
 	"EmailAddress":   EmailAddress,
 	"StreetAddress":  StreetAddress,
@@ -38,12 +38,16 @@ var stringFaker = map[string]func() string{
 	"Sentence":     Sentence,
 	"Sentences":    Sentences,
 	"Paragraphs":   Paragraphs,
+	"Description":  Paragraphs,
 	"FullName":     FullName,
+	"Name":         FullName,
 	"Gender":       Gender,
+	"Sex":          Gender,
 	"Language":     Language,
 	"Brand":        Brand,
 	"ProductName":  ProductName,
 	"Product":      Product,
+	"URL":          URL,
 }
 
 var intFaker = map[string]func() int{
@@ -55,9 +59,26 @@ var intFaker = map[string]func() int{
 	},
 }
 
+var uint64Faker = map[string]func() uint64{
+	"Price":    Price,
+	"Quantity": Quantity,
+}
+
 var floatFaker = map[string]func() float32{
 	"Latitude":  Latitude,
 	"Longitude": Longitude,
+}
+
+var float64Faker = map[string]func() float64{
+	"PriceF": PriceF,
+}
+
+var fakerGroup = map[reflect.Kind]interface{}{
+	reflect.String:  stringFaker,
+	reflect.Int:     intFaker,
+	reflect.Uint64:  uint64Faker,
+	reflect.Float32: floatFaker,
+	reflect.Float64: float64Faker,
 }
 
 // FillStruct fills struct field with faked data.
@@ -72,15 +93,10 @@ func FillStruct(a interface{}) interface{} {
 }
 
 func fillStruct(v reflect.Value, name string, tag reflect.StructTag) reflect.Value {
-	//	for j := 0; j < v.NumField(); j++ {
-	//		f := v.Field(j)
-	//		n := v.Type().Field(j).Name
-	//		tag := v.Type().Field(j).Tag
-	//		t := f.Kind()
+	if tag.Get("fake") == "-" {
+		return v
+	}
 
-	//		if f.CanSet() == false {
-	//			continue
-	//		}
 	t := v.Kind()
 
 	if t == reflect.String {
