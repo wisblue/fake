@@ -87,23 +87,59 @@ Using FillStruct:
  FillStruct fills struct field with faked data.  At first FillStruct will try to get the field tag with tag key "fake" for which fake function to call. If "fake" tag is not set, it will look at the field name if matches a fake function name. Otherwise a error is logged out.
 
 ```go
-	type A struct {
-		UserName string	
-		Profile  struct {
-			EmailAddresses [2]string `fake:"EmailAddress"`
-			Place          string    `fake:"StreetAddress"`
-			Phone          string
-			PostCode       string `fake:"zip"`
-		}
-		CreditCardType string
-		CreditCardNum  string
-		Currency       string
-		CurrencyCode   string
-		Day            int
-	...
+type A struct {
+    UserName string
+    Profile  struct {
+        EmailAddresses [2]string
+        Place          string `fake:"StreetAddress"`
+        Phone          string
+        PostCode       string `fake:"zip"`
+    }
+    CreditCardType string
+    CreditCardNum  string
+    Currency       string
+    CurrencyCode   string `fake:"-"` // skip
+    Day            int
+    WeekDay        string
+    WeekDayShort   string
+    WeekdayNum     int
+    Month          string
+    MonthShort     string
+    MonthNum       int
+    Year           int
+    Longitude      float32
+    Latitude       float32
+    Password       string
+    Color          string
+    HexColor       string
+    DomainName     string
+    IPv4           string
+    IPv6           string
+    UserAgent      string
+    Company        string
+    JobTitle       string
+    Industry       string
+    Title          string
+    Sentence       string
+    Sentences      string
+    Paragraphs     string
+    FullName       string
+    Gender         string
+    Sex            string
+    Languages      []string
+    Brand          string
+    ProductName    string
+    Product        string
+    URL            string
+    Description    string
+    Price          uint64
+    Quantity       uint64
+    PriceF         float64
+    CreatedAt      time.Time
 }
-
 a := &A{}
+a.Languages = make([]string, 2)
+
 a = FillStruct(&a).(*A)
 fmt.Printf("%+v\n", *a)
 ```

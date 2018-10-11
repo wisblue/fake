@@ -57,5 +57,10 @@ func TestInternet(t *testing.T) {
 		if v == "" {
 			t.Errorf("IPv6 failed with lang %s", lang)
 		}
+
+		v = URL()
+		if v == "" {
+			t.Errorf("URL failed with lang %s", lang)
+		}
 	}
 }

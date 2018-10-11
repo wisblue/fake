@@ -3,11 +3,13 @@ package fake
 import (
 	"log"
 	"reflect"
+	"time"
 
 	"github.com/iancoleman/strcase"
+	"github.com/jinzhu/inflection"
 )
 
-var stringFaker = map[string]interface{}{
+var fakerFuncs = map[string]interface{}{
 	"UserName":       UserName,
 	"EmailAddress":   EmailAddress,
 	"StreetAddress":  StreetAddress,
@@ -48,37 +50,21 @@ var stringFaker = map[string]interface{}{
 	"ProductName":  ProductName,
 	"Product":      Product,
 	"URL":          URL,
-}
-
-var intFaker = map[string]func() int{
-	"Day":        Day,
-	"WeekdayNum": WeekdayNum,
-	"MonthNum":   MonthNum,
+	"Day":          Day,
+	"WeekdayNum":   WeekdayNum,
+	"MonthNum":     MonthNum,
 	"Year": func() int {
 		return Year(1950, 2020)
 	},
-}
-
-var uint64Faker = map[string]func() uint64{
-	"Price":    Price,
-	"Quantity": Quantity,
-}
-
-var floatFaker = map[string]func() float32{
+	"Price":     Price,
+	"Quantity":  Quantity,
 	"Latitude":  Latitude,
 	"Longitude": Longitude,
-}
-
-var float64Faker = map[string]func() float64{
-	"PriceF": PriceF,
-}
-
-var fakerGroup = map[reflect.Kind]interface{}{
-	reflect.String:  stringFaker,
-	reflect.Int:     intFaker,
-	reflect.Uint64:  uint64Faker,
-	reflect.Float32: floatFaker,
-	reflect.Float64: float64Faker,
+	"PriceF":    PriceF,
+	"CreatedAt": Time,
+	"KSUID":     KSUID,
+	"UUID":      UUID,
+	"OpenID":    OpenID,
 }
 
 // FillStruct fills struct field with faked data.
@@ -99,54 +85,8 @@ func fillStruct(v reflect.Value, name string, tag reflect.StructTag) reflect.Val
 
 	t := v.Kind()
 
-	if t == reflect.String {
-		var fakeFn func() string
-		if fakeFunc := tag.Get("fake"); fakeFunc != "" {
-			if fn, ok := stringFaker[strcase.ToCamel(fakeFunc)]; ok {
-				fakeFn = fn
-			}
-		}
-		if fakeFn == nil {
-			if fn, ok := stringFaker[strcase.ToCamel(name)]; ok {
-				fakeFn = fn
-			}
-		}
-		if fakeFn != nil {
-			v.SetString(fakeFn())
-		} else {
-			log.Println("Do not know how for fake ", name)
-		}
-	} else if t == reflect.Int || t == reflect.Int64 {
-		var fakeFn func() int
-		if fakeFunc := tag.Get("fake"); fakeFunc != "" {
-			if fn, ok := intFaker[strcase.ToCamel(fakeFunc)]; ok {
-				fakeFn = fn
-			}
-		}
-		if fakeFn == nil {
-			if fn, ok := intFaker[strcase.ToCamel(name)]; ok {
-				fakeFn = fn
-			}
-		}
-		if fakeFn != nil {
-			v.SetInt(int64(fakeFn()))
-		}
-	} else if t == reflect.Float32 || t == reflect.Float64 {
-		var fakeFn func() float32
-		if fakeFunc := tag.Get("fake"); fakeFunc != "" {
-			if fn, ok := floatFaker[strcase.ToCamel(fakeFunc)]; ok {
-				fakeFn = fn
-			}
-		}
-		if fakeFn == nil {
-			if fn, ok := floatFaker[strcase.ToCamel(name)]; ok {
-				fakeFn = fn
-			}
-		}
-		if fakeFn != nil {
-			v.SetFloat(float64(fakeFn()))
-		}
-	} else if t == reflect.Struct {
+	if t == reflect.Struct &&
+		v.Type().String() != "time.Time" {
 		vv := reflect.Indirect(v)
 		for j := 0; j < vv.NumField(); j++ {
 			tag := vv.Type().Field(j).Tag
@@ -155,12 +95,61 @@ func fillStruct(v reflect.Value, name string, tag reflect.StructTag) reflect.Val
 		}
 	} else if t == reflect.Slice {
 		for i := 0; i < v.Len(); i++ {
-			fillStruct(v.Index(i), name, tag)
+			fillStruct(v.Index(i), inflection.Singular(name), tag)
 		}
 	} else if t == reflect.Array {
 		for i := 0; i < v.Len(); i++ {
-			fillStruct(v.Index(i), name, tag)
+			fillStruct(v.Index(i), inflection.Singular(name), tag)
 		}
+	} else {
+		var fakeFn interface{}
+		// if we can get fake func name from tag
+		if fakeFuncName := tag.Get("fake"); fakeFuncName != "" {
+			if fn, ok := fakerFuncs[strcase.ToCamel(fakeFuncName)]; ok {
+				fakeFn = fn
+			}
+		}
+		// otherwise get it from field name
+		if fakeFn == nil {
+			if fn, ok := fakerFuncs[strcase.ToCamel(name)]; ok {
+				fakeFn = fn
+			}
+		}
+		if fakeFn != nil {
+			switch t {
+			case reflect.String:
+				if fn, ok := fakeFn.(func() string); ok {
+					v.SetString(fn())
+				}
+			case reflect.Int, reflect.Int64:
+				if fn, ok := fakeFn.(func() int); ok {
+					v.SetInt(int64(fn()))
+				}
+			case reflect.Uint64:
+				if fn, ok := fakeFn.(func() uint64); ok {
+					v.SetUint(fn())
+				}
+			case reflect.Float32:
+				if fn, ok := fakeFn.(func() float32); ok {
+					v.SetFloat(float64(fn()))
+				}
+			case reflect.Float64:
+				if fn, ok := fakeFn.(func() float64); ok {
+					v.SetFloat(fn())
+				}
+			case reflect.Struct:
+				if v.Type().String() == "time.Time" {
+					if fn, ok := fakeFn.(func() time.Time); ok {
+						v.Set(reflect.ValueOf(fn()))
+					}
+				}
+			default:
+				log.Printf("unhandled field %s as type %s\n", name, t)
+			}
+		} else {
+			log.Println("Cannot find fake function for field ", name)
+		}
+
 	}
 
 	return v

@@ -1,6 +1,7 @@
 package fake
 
 import (
+	"fmt"
 	"net"
 	"strings"
 
@@ -154,4 +155,33 @@ func IPv6() string {
 // UserAgent generates a random user agent.
 func UserAgent() string {
 	return uarand.GetRandom()
+}
+
+var urlFormats = []string{
+	"http://www.%s/",
+	"https://www.%s/",
+	"http://%s/",
+	"https://%s/",
+	"http://www.%s/%s",
+	"https://www.%s/%s",
+	"http://%s/%s",
+	"https://%s/%s",
+	"http://%s/%s.html",
+	"https://%s/%s.html",
+	"http://%s/%s.php",
+	"https://%s/%s.php",
+}
+
+// URL generates random URL standardised in urlFormats const
+func URL() string {
+	format := randomElementFromSliceString(urlFormats)
+	countVerbs := strings.Count(format, "%s")
+	if countVerbs == 1 {
+		return fmt.Sprintf(format, DomainName())
+	}
+	return fmt.Sprintf(format, DomainName(), UserName())
+}
+
+func randomElementFromSliceString(s []string) string {
+	return s[r.Int()%len(s)]
 }

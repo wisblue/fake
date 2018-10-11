@@ -4,6 +4,7 @@ import (
 	"log"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func init() {
@@ -14,8 +15,8 @@ func TestFillStruct(t *testing.T) {
 	type A struct {
 		UserName string
 		Profile  struct {
-			EmailAddresses [2]string `fake:"EmailAddress"`
-			Place          string    `fake:"StreetAddress"`
+			EmailAddresses [2]string
+			Place          string `fake:"StreetAddress"`
 			Phone          string
 			PostCode       string `fake:"zip"`
 		}
@@ -49,26 +50,34 @@ func TestFillStruct(t *testing.T) {
 		Paragraphs     string
 		FullName       string
 		Gender         string
-		Language       string
+		Sex            string
+		Languages      []string
 		Brand          string
 		ProductName    string
 		Product        string
 		URL            string
 		Description    string
 		Price          uint64
-		Quantiry       uint64
+		Quantity       uint64
 		PriceF         float64
+		CreatedAt      time.Time
+		KSUID          string
+		UUID           string
+		OpenID         string
 	}
 	a := &A{}
+	a.Languages = make([]string, 2)
 
 	for _, lang := range availLangs {
 		SetLang(lang)
 
 		a = FillStruct(a).(*A)
 		//t.Logf("%+v\n", *a)
+		//t.Log(a.Profile.EmailAddresses)
+		//t.Log(a.Languages)
+		//t.Log(a.CreatedAt)
 
-		t.Log(a.Price)
-
+		// skipped field
 		if a.CurrencyCode != "" {
 			t.Errorf("Expect CurrencyCode to be empty. got %s\n", a.CurrencyCode)
 		}
@@ -90,8 +99,18 @@ func TestFillStruct(t *testing.T) {
 					t.Log("Failed field:", n, f.Int())
 					t.Fail()
 				}
+			} else if kind == reflect.Uint64 {
+				if f.Uint() <= 0 {
+					t.Log("Failed field:", n, f.Int())
+					t.Fail()
+				}
 			} else if kind == reflect.Float32 {
 				if f.Float() < -180 || f.Float() > 180 {
+					t.Log("Failed field:", n, f.Float())
+					t.Fail()
+				}
+			} else if kind == reflect.Float64 {
+				if f.Float() == 0 {
 					t.Log("Failed field:", n, f.Float())
 					t.Fail()
 				}
@@ -116,6 +135,19 @@ func TestFillStruct(t *testing.T) {
 						}
 					}
 				}
+			} else if kind == reflect.Slice || kind == reflect.Array {
+				for k := 0; k < f.Len(); k++ {
+					item := f.Index(k)
+					if item.Kind() != reflect.String {
+						t.Fail()
+					}
+					if item.String() == "" {
+						t.Fail()
+					}
+					//t.Log(item.String())
+				}
+			} else {
+				t.Error("unhandled type:", kind)
 			}
 		}
 	}
