@@ -140,7 +140,7 @@ type A struct {
 a := &A{}
 a.Languages = make([]string, 2)
 
-a = FillStruct(&a).(*A)
+FillStruct(&a)
 fmt.Printf("%+v\n", *a)
 ```
 

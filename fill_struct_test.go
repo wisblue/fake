@@ -71,7 +71,8 @@ func TestFillStruct(t *testing.T) {
 	for _, lang := range availLangs {
 		SetLang(lang)
 
-		a = FillStruct(a).(*A)
+		FillStruct(a)
+		t.Log(a)
 		//t.Logf("%+v\n", *a)
 		//t.Log(a.Profile.EmailAddresses)
 		//t.Log(a.Languages)
